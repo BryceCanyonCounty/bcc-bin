@@ -8,8 +8,8 @@ Config.SetupBin = {
 }
 
 Config.RandomItems = {
-    "apple",
-    "water"
+    { itemName = "apple", itemLabel = "Apple" },
+    { itemName = "water", itemLabel = "Water" },
 }
 
 Config.RandomWeapons = {
