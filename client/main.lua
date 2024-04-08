@@ -1,20 +1,14 @@
-VORPutils = {}
-TriggerEvent("getUtils", function(utils)
-    VORPutils = utils
-end)
+BccUtils = exports['bcc-utils'].initiate()
 
 local progressbar = exports.vorp_progressbar:initiate()
 local currentIndex = 1
 
-RegisterNetEvent("vorp:SelectedCharacter")
-AddEventHandler("vorp:SelectedCharacter", function()
+RegisterNetEvent("vorp:SelectedCharacter", function()
     SpawnBin()
 end)
 
-
-
 CreateThread(function()
-    local PromptGroup = VORPutils.Prompts:SetupPromptGroup()
+    local PromptGroup = BccUtils.Prompts:SetupPromptGroup()
     local firstprompt = PromptGroup:RegisterPrompt(_U("search"), 0x760A9C6F, 1, 1, true, 'hold',
         { timedeventhash = "SHORT_TIMED_EVENT_MP" })
 
@@ -47,7 +41,7 @@ function SpawnBin()
     local data = Config.RandomLocations[currentIndex]
 
     if data then
-        local obj = VORPutils.Objects:Create(model, data.coords.x, data.coords.y, data.coords.z, 0, true, 'standard')
+        local obj = BccUtils.Objects:Create(model, data.coords.x, data.coords.y, data.coords.z, 0, true, 'standard')
 
         Wait(Config.SetupBin.BinDuration)
         obj:Remove()

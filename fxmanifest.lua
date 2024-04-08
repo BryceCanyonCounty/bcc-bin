@@ -7,6 +7,12 @@ version '0.0.1'
 lua54 'yes'
 author 'huzurweriN'
 
+shared_scripts {
+   'shared/config.lua',
+   'locale.lua',
+   'languages/*.lua'
+}
+
 client_scripts {
    'client/main.lua',
 }
@@ -15,13 +21,7 @@ server_scripts {
    'server/main.lua'
 }
 
-shared_scripts {
-   'shared/config.lua',
-   'locale.lua',
-   'languages/*.lua'
-}
-
-dependencies { 
-    'vorp_core',
-    'bcc-utils'
+dependencies {
+   'vorp_core',
+   'bcc-utils'
 }

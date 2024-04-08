@@ -5,5 +5,11 @@ Locales["en_lang"] = {
     progressbar = 'Searching Bin',
     moneyfound = 'Found Money',
     itemfound = 'Found an Item',
-    weaponfound = 'Found a Weapon'
+    weaponfound = 'Found a Weapon',
+    webhookName = 'Firstname&Lastname: ',
+    webhookIdentifier = '\nIdentifier:',
+    webhookRewardM = '\nReward Money: ',
+    webhookRewardI = '\nReward Item: ',
+    webhookRewardW = '\nReward Weapon: ',
+    
 }
