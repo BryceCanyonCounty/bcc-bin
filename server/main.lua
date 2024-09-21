@@ -59,3 +59,6 @@ RegisterServerEvent('bcc-bin:Reward', function()
         VORPcore.NotifyRightTip(source, _U("weaponfound"), 4000)
     end
 end)
+
+-- Version check
+BccUtils.Versioner.checkFile(GetCurrentResourceName(), 'https://github.com/BryceCanyonCounty/bcc-bin')

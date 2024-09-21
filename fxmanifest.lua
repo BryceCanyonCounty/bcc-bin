@@ -25,3 +25,5 @@ dependencies {
    'vorp_core',
    'bcc-utils'
 }
+
+version '0.0.3'
