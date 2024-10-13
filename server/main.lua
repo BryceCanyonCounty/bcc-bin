@@ -1,62 +1,128 @@
-local VORPcore = exports.vorp_core:GetCore() -- NEW includes  new callback system
+local VORPcore = exports.vorp_core:GetCore()
+local BccUtils = exports['bcc-utils'].initiate()
 
-BccUtils = exports['bcc-utils'].initiate()
-local discord = BccUtils.Discord.setup(Config.Webhook, Config.WebhookTitle, Config.webhookAvatar)
+local Discord = BccUtils.Discord.setup(Config.Webhook, Config.WebhookTitle, Config.webhookAvatar)
+local InitialCoordsSet = false
+local Location = {}
+local CooldownData = {}
+
+VORPcore.Callback.Register('bcc-bin:SetLocation', function(source, cb)
+    local src = source
+    local user = VORPcore.getUser(src)
+    if not user then return cb(false) end
+
+    if not InitialCoordsSet then
+        Location = Locations[math.random(1, #Locations)]
+        InitialCoordsSet = true
+    end
+    cb(Location)
+end)
+
+local function UpdateLocation()
+    Location = Locations[math.random(1, #Locations)]
+    TriggerClientEvent('bcc-bin:SpawnBin', -1, Location)
+end
+
+local function SetPlayerCooldown(type, charid)
+    CooldownData[type .. tostring(charid)] = os.time()
+end
 
 RegisterServerEvent('bcc-bin:Reward', function()
-    local User = VORPcore.getUser(source)
-    local Character = User.getUsedCharacter
+    local src = source
+    local user = VORPcore.getUser(src)
+    if not user then return end
+    local character = user.getUsedCharacter
+    local charid = character.charIdentifier
 
     local randomNumber = math.random(1, 100)
     if randomNumber <= 50 then
-        local randomMoney = math.random(100, 500)
-        Character.addCurrency(0, randomMoney)
+        local randomMoney = math.random(Rewards.RandomMoney.min, Rewards.RandomMoney.max)
+        character.addCurrency(0, randomMoney)
 
-        discord:sendMessage(_U("webhookName") ..
-        Character.firstname ..
-        " " ..
-        Character.lastname ..
-        _U("webhookIdentifier") .. 
-        Character.identifier .. 
-        _U("webhookRewardM") .. 
-        randomMoney .. "$")
-        VORPcore.NotifyRightTip(source, _U("moneyfound"), 4000)
+        Discord:sendMessage(_U('webhookName') ..
+            character.firstname ..
+            ' ' ..
+            character.lastname ..
+            _U('webhookIdentifier') ..
+            character.identifier ..
+            _U('webhookRewardM') ..
+            randomMoney .. '$')
+        VORPcore.NotifyRightTip(src, _U('moneyfound') .. tostring(randomMoney), 4000)
+
     elseif randomNumber <= 98 then
-        local randomItems = Config.RandomItems
+        local randomItems = Rewards.RandomItems
         local randomItemAmount = math.random(1, 3)
         local randomCalc = math.random(1, #randomItems)
         local selectedItem = randomItems[randomCalc]
         local itemName = selectedItem.itemName
         local itemLabel = selectedItem.itemLabel
 
-        -- TODO: Check if the character has the space in inventory to add the item.
+        local canCarryItem = exports.vorp_inventory:canCarryItem(src, itemName, randomItemAmount)
+        if not canCarryItem then
+            VORPcore.NotifyRightTip(src, _U('noSpace'), 4000)
+            goto END
+        end
+        exports.vorp_inventory:addItem(src, itemName, randomItemAmount)
 
-        exports.vorp_inventory:addItem(source, itemName, randomItemAmount)
+        Discord:sendMessage(_U('webhookName') ..
+            character.firstname ..
+            ' ' .. character.lastname ..
+            _U('webhookIdentifier') ..
+            character.identifier ..
+            _U('webhookRewardI') ..
+            itemName)
+        VORPcore.NotifyRightTip(src, _U('itemfound') .. ' ' .. itemLabel, 4000)
 
-        discord:sendMessage(_U("webhookName") ..
-        Character.firstname ..
-        " " .. Character.lastname .. 
-        _U("webhookIdentifier") .. 
-        Character.identifier .. 
-        _U("webhookRewardI") .. 
-        itemName)
-        VORPcore.NotifyRightTip(source, _U("itemfound") .. " " .. itemLabel, 4000)
     else
-        local randomWeapons = Config.RandomWeapons
+        local randomWeapons = Rewards.RandomWeapons
         local randomWeaponCalc = math.random(1, #randomWeapons)
         local randomWeapon = randomWeapons[randomWeaponCalc]
 
-        -- TODO: Check if the character has the space in inventory to add the weapon.
-        exports.vorp_inventory:createWeapon(source, randomWeapon)
-        discord:sendMessage(_U("webhookName") ..
-            Character.firstname ..
-            " " ..
-            Character.lastname ..
-            _U("webhookIdentifier")
-            .. Character.identifier ..
-            _U("webhookRewardW") ..
+        local canCarryWeapon = exports.vorp_inventory:canCarryWeapons(src, 1, nil, randomWeapon)
+        if not canCarryWeapon then
+            VORPcore.NotifyRightTip(src, _U('noSpace'), 4000)
+            goto END
+        end
+        exports.vorp_inventory:createWeapon(src, randomWeapon)
+
+        Discord:sendMessage(_U('webhookName') ..
+            character.firstname ..
+            ' ' ..
+            character.lastname ..
+            _U('webhookIdentifier')
+            .. character.identifier ..
+            _U('webhookRewardW') ..
             randomWeapon)
-        VORPcore.NotifyRightTip(source, _U("weaponfound"), 4000)
+        VORPcore.NotifyRightTip(src, _U('weaponfound') .. randomWeapon, 4000)
+    end
+    ::END::
+    SetPlayerCooldown('useBin', charid)
+    UpdateLocation()
+end)
+
+VORPcore.Callback.Register('bcc-bin:CheckPlayerCooldown', function(source, cb, type)
+    local src = source
+    local user = VORPcore.getUser(src)
+    if not user then return cb(false) end
+    local character = user.getUsedCharacter
+    local cooldown = Config.cooldown[type]
+    local onList = false
+    local typeId = type .. tostring(character.charIdentifier)
+
+    for id, time in pairs(CooldownData) do
+        if id == typeId then
+            onList = true
+            if os.difftime(os.time(), time) >= cooldown * 60 then
+                cb(false) -- Not on Cooldown
+                break
+            else
+                cb(true)
+                break
+            end
+        end
+    end
+    if not onList then
+        cb(false)
     end
 end)
 
