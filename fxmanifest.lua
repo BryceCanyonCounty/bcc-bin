@@ -3,7 +3,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 
 game 'rdr3'
 lua54 'yes'
-author 'huzurweriN'
+author 'BCC Scripts @ huzurweriN'
 
 shared_scripts {
    'configs/*.lua',
@@ -25,4 +25,4 @@ dependencies {
    'feather-progressbar'
 }
 
-version '0.1.0'
+version '1.0.0'
