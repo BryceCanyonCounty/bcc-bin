@@ -3,6 +3,10 @@
 -----------------------------------------------------
 Config = {
 
+    oxtarget = true, -- Set true if need to use ox target
+
+    notify = 'ox', -- ox for ox_lib notification vorp for vorp notification
+
     defaultlang = 'en_lang',
     -----------------------------------------------------
 
@@ -25,9 +29,15 @@ Config = {
     -----------------------------------------------------
 
     -- Discord Webhook Config
+    discordlog = false, 
     Webhook       = '',
-    WebhookTitle  = 'BCC-Bin',
-    WebhookAvatar = 'https://cdn.discordapp.com/attachments/1121170589084811295/1141885805900607509/bird2.png',
+    WebhookTitle  = '',
+    WebhookAvatar = '',
+    -----------------------------------------------------
+
+    -- Grafana Log Config. Do not touch this if you don't know what you doing.
+    grafanalog = false,
+
     -----------------------------------------------------
 
     blip = {
