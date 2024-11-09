@@ -1,8 +1,6 @@
 local VORPcore = exports.vorp_core:GetCore()
 
-local BinPrompt
 local BinGroup = GetRandomIntInRange(0, 0xffffff)
-
 local progressbar = exports["feather-progressbar"]:initiate()
 local Bin = 0
 
@@ -36,9 +34,68 @@ RegisterNetEvent('bcc-bin:SpawnBin', function(location)
         Citizen.InvokeNative(0x9CB1A1623062F402, blip, Config.blip.name) -- SetBlipName
         Citizen.InvokeNative(0x662D364ABF16DE2F, blip, joaat(Config.BlipColors[Config.blip.color])) -- BlipAddModifier
     end
+
+    if Config.oxtarget then
+        exports.ox_target:addLocalEntity(Bin, {
+            {
+                name = 'search_bin',
+                icon = 'fas fa-search',
+                label = _U('search'),
+                canInteract = function(entity)
+                    return entity == Bin
+                end,
+                onSelect = function(data)
+                    local onCooldown = VORPcore.Callback.TriggerAwait('bcc-bin:CheckPlayerCooldown', 'useBin')
+                    if onCooldown then
+                        if Config.notify == 'ox' then
+                            lib.notify({description = _U('useCooldown'), duration = 4000, type = 'error', position = 'center-right'}) 
+                        elseif Config.notify == 'vorp' then
+                            VORPcore.NotifyRightTip(_U('useCooldown'), 4000)
+                        end
+                    else
+                        ProgBar()
+                        Anim()
+                        TriggerServerEvent('bcc-bin:Reward')
+                    end
+                end
+            }
+        })
+    end
 end)
 
-local function StartPrompts()
+if not Config.oxtarget then
+    CreateThread(function()
+        StartPrompts()
+    
+        while true do
+            local sleep = 1000
+            local distance = GetEntityCoords(PlayerPedId())
+            local check = Citizen.InvokeNative(0xBFA48E2FF417213F, distance.x, distance.y, distance.z, 1.5, joaat(Config.SetupBin.object), 0)
+            if check then
+                sleep = 0
+                PromptSetActiveGroupThisFrame(BinGroup, CreateVarString(10, 'LITERAL_STRING', _U('bin')), 1, 0, 0, 0)
+                if Citizen.InvokeNative(0xE0F65F0640EF0617, BinPrompt) then  -- PromptHasHoldModeCompleted
+                    local onCooldown = VORPcore.Callback.TriggerAwait('bcc-bin:CheckPlayerCooldown', 'useBin')
+                    if onCooldown then
+                        if Config.notify == 'ox' then
+                            lib.notify({description = _U('useCooldown'), duration = 4000, type = 'error', position = 'center-right'}) 
+                        elseif Config.notify == 'vorp' then
+                            VORPcore.NotifyRightTip(_U('useCooldown'), 4000)
+                        end
+                        goto END
+                    end
+                    ProgBar()
+                    Anim()
+                    TriggerServerEvent('bcc-bin:Reward')
+                end
+            end
+            ::END::
+            Wait(sleep)
+        end
+    end)
+end
+
+function StartPrompts()
     BinPrompt = PromptRegisterBegin()
     PromptSetControlAction(BinPrompt, Config.keys.search)
     PromptSetText(BinPrompt, CreateVarString(10, 'LITERAL_STRING', _U('search')))
@@ -49,12 +106,11 @@ local function StartPrompts()
     PromptRegisterEnd(BinPrompt)
 end
 
-local function ProgBar()
-    progressbar.start(_U('progressbar'), 6000, function()
-    end, 'innercircle')
+function ProgBar()
+    progressbar.start(_U('progressbar'), 6000, function() end, 'innercircle')
 end
 
-local function Anim()
+function Anim()
     local playerPed = PlayerPedId()
 
     RequestAnimDict('amb_work@world_human_bartender@serve_player')
@@ -69,32 +125,6 @@ local function Anim()
 
     ClearPedTasks(playerPed)
 end
-
-CreateThread(function()
-    StartPrompts()
-
-    while true do
-        local sleep = 1000
-        local distance = GetEntityCoords(PlayerPedId())
-        local check = Citizen.InvokeNative(0xBFA48E2FF417213F, distance.x, distance.y, distance.z, 1.5, joaat(Config.SetupBin.object), 0)
-        if check then
-            sleep = 0
-            PromptSetActiveGroupThisFrame(BinGroup, CreateVarString(10, 'LITERAL_STRING', _U('bin')), 1, 0, 0, 0)
-            if Citizen.InvokeNative(0xE0F65F0640EF0617, BinPrompt) then  -- PromptHasHoldModeCompleted
-                local onCooldown = VORPcore.Callback.TriggerAwait('bcc-bin:CheckPlayerCooldown', 'useBin')
-                if onCooldown then
-                    VORPcore.NotifyRightTip(_U('useCooldown'), 4000)
-                    goto END
-                end
-                ProgBar()
-                Anim()
-                TriggerServerEvent('bcc-bin:Reward')
-            end
-        end
-        ::END::
-        Wait(sleep)
-    end
-end)
 
 if Config.devMode then
     RegisterCommand('bin', function()

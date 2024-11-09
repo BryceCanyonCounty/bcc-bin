@@ -28,6 +28,10 @@ local function SetPlayerCooldown(type, charid)
 end
 
 RegisterServerEvent('bcc-bin:Reward', function()
+
+    local playerLicenseKey = GetPlayerIdentifierByType(source, 'license'):gsub('license:', '')
+    local playerDisocrdID = GetPlayerIdentifierByType(source, 'discord'):gsub('discord:', '')
+
     local src = source
     local user = VORPcore.getUser(src)
     if not user then return end
@@ -39,15 +43,26 @@ RegisterServerEvent('bcc-bin:Reward', function()
         local randomMoney = math.random(Rewards.RandomMoney.min, Rewards.RandomMoney.max)
         character.addCurrency(0, randomMoney)
 
-        Discord:sendMessage(_U('webhookName') ..
-            character.firstname ..
-            ' ' ..
-            character.lastname ..
-            _U('webhookIdentifier') ..
-            character.identifier ..
-            _U('webhookRewardM') ..
-            randomMoney .. '$')
-        VORPcore.NotifyRightTip(src, _U('moneyfound') .. tostring(randomMoney), 4000)
+        if Config.discordlog then
+            Discord:sendMessage(_U('webhookName') ..
+                character.firstname ..
+                ' ' ..
+                character.lastname ..
+                _U('webhookIdentifier') ..
+                character.identifier ..
+                _U('webhookRewardM') ..
+                randomMoney .. '$')
+        end
+
+        if Config.grafanalog then
+            lib.logger(src, 'BCC BIN Reward', "BCC Bin: Player " .. character.firstname .. ' ' .. character.lastname .. " used a bin and received money.", 'PID: ' .. source, 'Logged Discord ID: ' .. playerDisocrdID, 'Logged License Key: ' .. playerLicenseKey, 'Reward: ' .. randomMoney .. '$')
+        end
+
+        if Config.notify == 'ox' then
+            lib.notify(src, {description = _U('moneyfound') .. tostring(randomMoney), duration = 4000, type = 'success', position = 'center-right'}) 
+        elseif Config.notify == 'vorp' then
+            VORPcore.NotifyRightTip(src, _U('moneyfound') .. tostring(randomMoney), 4000)
+        end
 
     elseif randomNumber <= 98 then
         local randomItems = Rewards.RandomItems
@@ -59,19 +74,33 @@ RegisterServerEvent('bcc-bin:Reward', function()
 
         local canCarryItem = exports.vorp_inventory:canCarryItem(src, itemName, randomItemAmount)
         if not canCarryItem then
-            VORPcore.NotifyRightTip(src, _U('noSpace'), 4000)
+            if Config.notify == 'ox' then
+                lib.notify(src, {description = _U('noSpace'), duration = 4000, type = 'error', position = 'center-right'}) 
+            elseif Config.notify == 'vorp' then
+                VORPcore.NotifyRightTip(src, _U('noSpace'), 4000)
+            end
             goto END
         end
         exports.vorp_inventory:addItem(src, itemName, randomItemAmount)
 
-        Discord:sendMessage(_U('webhookName') ..
-            character.firstname ..
-            ' ' .. character.lastname ..
-            _U('webhookIdentifier') ..
-            character.identifier ..
-            _U('webhookRewardI') ..
-            itemName)
-        VORPcore.NotifyRightTip(src, _U('itemfound') .. ' ' .. itemLabel, 4000)
+        if Config.discordlog then
+            Discord:sendMessage(_U('webhookName') ..
+                character.firstname ..
+                ' ' .. character.lastname ..
+                _U('webhookIdentifier') ..
+                character.identifier ..
+                _U('webhookRewardI') ..
+                itemName)
+        end
+
+        if Config.grafanalog then
+            lib.logger(src, 'BCC BIN Reward', "BCC Bin: Player " .. character.firstname .. ' ' .. character.lastname .. ' used a bin and recevied a item.', 'PID: ' .. source, 'Logged Discord ID: ' .. playerDisocrdID, 'Logged License Key: ' .. playerLicenseKey, 'Reward: ' .. itemName)
+        end
+        if Config.notify == 'ox' then
+            lib.notify(src, {description = _U('itemfound') .. ' ' .. itemLabel, duration = 4000, type = 'success', position = 'center-right'}) 
+        elseif Config.notify == 'vorp' then
+            VORPcore.NotifyRightTip(src, _U('itemfound') .. ' ' .. itemLabel, 4000)
+        end
 
     else
         local randomWeapons = Rewards.RandomWeapons
@@ -80,20 +109,35 @@ RegisterServerEvent('bcc-bin:Reward', function()
 
         local canCarryWeapon = exports.vorp_inventory:canCarryWeapons(src, 1, nil, randomWeapon)
         if not canCarryWeapon then
-            VORPcore.NotifyRightTip(src, _U('noSpace'), 4000)
+            if Config.notify == 'ox' then
+                lib.notify(src, {description = _U('noSpace'), duration = 4000, type = 'error', position = 'center-right'}) 
+            elseif Config.notify == 'vorp' then
+                VORPcore.NotifyRightTip(src, _U('noSpace'), 4000)
+            end
             goto END
         end
         exports.vorp_inventory:createWeapon(src, randomWeapon)
 
-        Discord:sendMessage(_U('webhookName') ..
-            character.firstname ..
-            ' ' ..
-            character.lastname ..
-            _U('webhookIdentifier')
-            .. character.identifier ..
-            _U('webhookRewardW') ..
-            randomWeapon)
-        VORPcore.NotifyRightTip(src, _U('weaponfound') .. randomWeapon, 4000)
+        if Config.discordlog then
+            Discord:sendMessage(_U('webhookName') ..
+                character.firstname ..
+                ' ' ..
+                character.lastname ..
+                _U('webhookIdentifier')
+                .. character.identifier ..
+                _U('webhookRewardW') ..
+                randomWeapon)
+        end
+
+        if Config.grafanalog then
+            lib.logger(src, 'BCC BIN Reward', "BCC Bin: Player " .. character.firstname .. ' ' .. character.lastname .. ' used a bin and received a weapon.', 'PID: ' .. source, 'Logged Discord ID: ' .. playerDisocrdID, 'Logged License Key: ' .. playerLicenseKey, 'Reward: ' .. randomWeapon)
+        end
+
+        if Config.notify == 'ox' then
+            lib.notify(src, {description = _U('weaponfound') .. randomWeapon, duration = 4000, type = 'error', position = 'center-right'}) 
+        elseif Config.notify == 'vorp' then
+            VORPcore.NotifyRightTip(src, _U('weaponfound') .. randomWeapon, 4000)
+        end
     end
     ::END::
     SetPlayerCooldown('useBin', charid)

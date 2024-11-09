@@ -7,6 +7,9 @@
 - Random rewards set in config
 - Cooldown timer after using the bin
 - Enable/Disable blip for bin on map
+- Configuration option to use ox_target instead of prompts
+- Configuration option to select the notification type from ox or vorp
+- Configuration option to enable disable discord logs and grafana logs.
 
 ## Installation
 1. Make sure dependencies are installed/updated and ensured before this script
@@ -19,6 +22,10 @@
  - [vorp_inventory](https://github.com/VORPCORE/vorp_inventory-lua)
  - [bcc-utils](https://github.com/BryceCanyonCounty/bcc-utils)
  - [feather-progressbar](https://github.com/FeatherFramework/feather-progressbar)
+
+## Optional Dependency if You use ox_target or ox notificaiton
+ - [ox_target](https://github.com/MrTerabyteLK/ox_target) (Modified ox_target for RedM)
+ - [ox_lib](https://github.com/overextended/ox_lib)
 
 ## GitHub
 - https://github.com/BryceCanyonCounty/bcc-bin
